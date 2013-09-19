@@ -19,10 +19,9 @@ class Network(co.network):
 
 		#public
 
-	def initNetwork(self,paramsDict = {'couplingStrength' : }):
+	def initNetwork(self,paramsDict = {'networkType' : 'SmallWorld', 'couplingStrength' : 0.01}):
 		#append paramsDict to networkParams
-		for key in paramsDict:
-			networkParams[key] = paramsDict[key]
+		self.__appendParamsToNetwork(paramsDict)
 		#choose network Topology
 		if self.networkParams["networkType"] == "SmallWorld":
 			self.__initSmallWorld()
@@ -48,11 +47,29 @@ class Network(co.network):
 		self.clear()
 
 		#private
-	def __initSmallWorld(self):
-		print "Initializing SmallWorld Network"
+	def __appendParamsToNetwork(self,paramsDict):	
+		for key in paramsDict:
+			self.networkParams[key] = paramsDict[key]
 
+	def __appendParamsToDefault(self,defaultDict):
+		for key in self.networkParams:
+			defaultDict[key] = self.networkParams[key] 
+
+	def __initSmallWorld(self):
+		defaultDict = {'rewiringProbability' : 0.5, 'delayTime' : 0.002, 'refractoryPeriod' : 0.021, 'nearestNeighbours': 25, 'nodeType': co.pcoIntegrateFireDelay()}
+		print "Initializing SmallWorld Network"
+		self.__appendParamsToDefault(defaultDict)
+
+		self.cycle(self.__nodeCount, defaultDict['nearestNeighbours'], defaultDict['nodeType'], co.weightedEdge(defaultDict['couplingStrength']))
+	        self.rewire(defaultDict['rewiringProbability'], defaultDict['nodeType'])
+		self.randomizeStates(defaultDict['nodeType'], co.uniform(0.0, 1.0));		
+	
 	def __initScaleFree(self):
+		defaultDict = {}
 		print "Initializing ScaleFree Network"
+		self.__appendParamsToDefault(defaultDict)
 
 	def __initRandomGraph(self):
+		defaultDict = {}
 		print "Initializing RandomGraph Network"
+		self.__appendParamsToDefault(defaultDict)

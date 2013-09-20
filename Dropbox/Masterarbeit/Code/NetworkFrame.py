@@ -12,13 +12,12 @@ class Network(co.network):
 # public
     def updateNetworkParams(self,paramsDict):
         """ DOCSTRING: """
-        for key in paramsDict:
-            self.__networkParams[key] = paramsDict[key]
+        self.__networkParams.update(paramsDict)
 
     def initNetwork(self):
         """ DOCSTRING: """
         if (self.__networkParams['networkType'] == 'SmallWorld'):
-            self.__initSmallWorld(self)
+            self.__initSmallWorld()
 
         elif (self.__networkParams['networkType'] == 'ScaleFree'):
             print 'not yet defined'
@@ -49,14 +48,12 @@ class Network(co.network):
         self.__defaultDict_scaleFree = {}  # Defaults for ScaleFree generation
         # Node-Defaults
         self.__defaultDict_pcoIntegrateFire = {  # Defaults for pcoIntegrateFire Nodes
-                                'delayTime': 0.002,
-                                'refractoryPeriod': 0.021,
-     
+                                'timeDelay': 0.002,
+                                'refractoryPeriod': 0.025,
+                                'alpha': 0.9,
                                 }
-        
-    def __updateDefaultParams(paramsDict,defaultDict):
-        for key in paramsDict:
-            defaultDict[key] = paramsDict[key]
+
+
 
     def __del__(self):
         """ DOCSTRING: """
@@ -65,7 +62,7 @@ class Network(co.network):
 
     def __initSmallWorld(self):
         """ DOCSTRING: """
-        self.__updateDefaultParams(self.__defaultDict_smallWorld,self.__networkParams)
+        self.__defaultDict_smallWorld.update(self.__networkParams)
 
         self.cycle(self.__defaultDict_smallWorld['nodeCount'],
                    self.__defaultDict_smallWorld['nearestNeighbours'],
@@ -80,7 +77,7 @@ class Network(co.network):
                             )
 
 newNet = Network()
-newNet.updateNetworkParams({'networkType': 'SmallWorld'})
+newNet.updateNetworkParams({'networkType': 'SmallWorld', 'edgeType': co.weightedEdge(0.01), 'nodeType': co.pcoIntegrateFire()})
 newNet.initNetwork()
 
 #    def __initRandomGraph():

@@ -1,75 +1,88 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+""" DOCSTRING: """
 
 import numpy as np
 import conedy as co
 
+
 class Network(co.network):
-	#Variables
-		#private
-		#public
+    """ DOCSTRING: """
 
-	#Functions
-		
-	def __init__(self):
-		co.network.__init__(self)
-		self.networkParams = {"networkType" : ""}
-		self.__oscillatorType = ""
-		self.__nodeCount = 0
+# public
+    def updateNetworkParams(self,paramsDict):
+        """ DOCSTRING: """
+        for key in paramsDict:
+            self.__networkParams[key] = paramsDict[key]
 
+    def initNetwork(self):
+        """ DOCSTRING: """
+        if (self.__networkParams['networkType'] == 'SmallWorld'):
+            self.__initSmallWorld(self)
 
-		#public
+        elif (self.__networkParams['networkType'] == 'ScaleFree'):
+            print 'not yet defined'
 
-	def initNetwork(self,paramsDict = {'networkType' : 'SmallWorld', 'couplingStrength' : 0.01}):
-		#append paramsDict to networkParams
-		self.__appendParamsToNetwork(paramsDict)
-		#choose network Topology
-		if self.networkParams["networkType"] == "SmallWorld":
-			self.__initSmallWorld()
-		elif self.networkParams["networkType"] == "RandomGraph":
-			self.__initRandomGraph()
-		elif self.networkParams["networkType"] == "ScaleFree":
-			self.__initScaleFree()
-		else: print "Error: networkType invalid or not yet defined" 
+        elif (self.__networkParams['networkType'] == 'RandomGraph'):
+            print 'not yet defined'
 
-	def printNetworkType(self,networkType):
-		return self.networkParams["networkType"]
-	def setOscillatorType(self,oscillatorType):
-		self.__oscillatorType = oscillatorType
-	def printOscillatorType(self):
-		return self.__oscillatorType
-	def setNodeCount(self,nodeCount):
-		self.__NodeCount = nodeCount
-	def printNodeCount(self):
-		return self.__nodeCount
+        else: print 'Error: networkType invalid or not set'
 
-	def __del__(self):
-		self.removeObserver()
-		self.clear()
+# private
+    def __init__(self):
+        """ DOCSTRING: """
+        co.network.__init__(self)  # Calls the init of Conedy's network class
+        self.__networkParams = {'networkType': '',  # e.g. smallWorld
+                                'nodeType': None,  # e.g. pcoIntegrateFire
+                                'couplingStrength': 0.01,
+                                'nodeCount': 10000,  
+                                }
+        # Network-Defaults
+        self.__defaultDict_smallWorld = {  # Defaults for smallWorld generation
+                                'rewiringProbability': 0.5,    
+                                'nearestNeighbours': 25,
+                                'edgeType': None,
+                                'distributionType': co.uniform(0.0,1.0),
+                                }
+  
+        self.__defaultDict_randomGraph = {}  # Defaults for RandomGraph generation
+        self.__defaultDict_scaleFree = {}  # Defaults for ScaleFree generation
+        # Node-Defaults
+        self.__defaultDict_pcoIntegrateFire = {  # Defaults for pcoIntegrateFire Nodes
+                                'delayTime': 0.002,
+                                'refractoryPeriod': 0.021,
+     
+                                }
+        
+    def __updateDefaultParams(paramsDict,defaultDict):
+        for key in paramsDict:
+            defaultDict[key] = paramsDict[key]
 
-		#private
-	def __appendParamsToNetwork(self,paramsDict):	
-		for key in paramsDict:
-			self.networkParams[key] = paramsDict[key]
+    def __del__(self):
+        """ DOCSTRING: """
+        self.removeObserver()
+        self.clear()
 
-	def __appendParamsToDefault(self,defaultDict):
-		for key in self.networkParams:
-			defaultDict[key] = self.networkParams[key] 
+    def __initSmallWorld(self):
+        """ DOCSTRING: """
+        self.__updateDefaultParams(self.__defaultDict_smallWorld,self.__networkParams)
 
-	def __initSmallWorld(self):
-		defaultDict = {'rewiringProbability' : 0.5, 'delayTime' : 0.002, 'refractoryPeriod' : 0.021, 'nearestNeighbours': 25, 'nodeType': co.pcoIntegrateFireDelay()}
-		print "Initializing SmallWorld Network"
-		self.__appendParamsToDefault(defaultDict)
+        self.cycle(self.__defaultDict_smallWorld['nodeCount'],
+                   self.__defaultDict_smallWorld['nearestNeighbours'],
+                   self.__defaultDict_smallWorld['nodeType'],  
+                   self.__defaultDict_smallWorld['edgeType']
+                  )
+        self.rewire(self.__defaultDict_smallWorld['rewiringProbability'],
+                    self.__defaultDict_smallWorld['nodeType']
+                   )
+        self.randomizeStates(self.__defaultDict_smallWorld['nodeType'],
+                             self.__defaultDict_smallWorld['distributionType']   
+                            )
 
-		self.cycle(self.__nodeCount, defaultDict['nearestNeighbours'], defaultDict['nodeType'], co.weightedEdge(defaultDict['couplingStrength']))
-	        self.rewire(defaultDict['rewiringProbability'], defaultDict['nodeType'])
-		self.randomizeStates(defaultDict['nodeType'], co.uniform(0.0, 1.0));		
-	
-	def __initScaleFree(self):
-		defaultDict = {}
-		print "Initializing ScaleFree Network"
-		self.__appendParamsToDefault(defaultDict)
+newNet = Network()
+newNet.updateNetworkParams({'networkType': 'SmallWorld'})
+newNet.initNetwork()
 
-	def __initRandomGraph(self):
-		defaultDict = {}
-		print "Initializing RandomGraph Network"
-		self.__appendParamsToDefault(defaultDict)
+#    def __initRandomGraph():
+
+#    def __initScaleFree():

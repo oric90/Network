@@ -3,9 +3,11 @@
 """ DOCSTRING: """
 
 import conedy as co
-import NodeDefaults as ND
+import NodeDefaults as ND  # NodeType
+import NetworkDefaults as NT  # NetworkTopologie
+import NetworkLogfile as NL  # NetworkLogfile to log parameters and stuff
 
-class Network(co.network,ND.NodeDefaults):
+class Network(co.network, ND.NodeDefaults, NT.NetworkDefaults):
     """ DOCSTRING: """
 
 # public
@@ -17,82 +19,80 @@ class Network(co.network,ND.NodeDefaults):
         """ DOCSTRING: """
         if (type(self.__networkParams['nodeType']) == type(co.pcoIntegrateFire())):
             self.__initNode_pcoIntegrateFire()
+            self.__nodesInitialized = True
         else: 
             raise LookupError ('initNetworkNodes: nodeType invalid or not yet defined')
 
     def initNetwork(self):
         """ DOCSTRING: """
-        if (self.__networkParams['networkType'] == 'SmallWorld'):
-            self.__initSmallWorld()
-
-        elif (self.__networkParams['networkType'] == 'ScaleFree'):
-            print 'not yet defined'
-
-        elif (self.__networkParams['networkType'] == 'RandomGraph'):
-            print 'not yet defined'
-
-        else: print 'Error: networkType invalid or not set'
-
+        self.setNetworkDefaults(self.__networkParams['networkType'])
+        self.__supportedNetworkTypes[self.__networkParams['networkType']]()
+    
 # private
     def __init__(self):
         """ DOCSTRING: """
         co.network.__init__(self)  # Calls the init of Conedy's network class
-        ND.NodeDefaults.__init__(self)  # Calls the init of NodeDefaults to implement the defaultDict
+        ND.NodeDefaults.__init__(self)  # Calls the init of NodeDefaults to prepare the defaultDict
+        NT.NetworkDefaults.__init__(self)  # Calls the init of NetworkDefaults to prepare the defaultDict
         self.__networkParams = {'networkType': '',  # e.g. smallWorld
                                 'nodeType': None,  # e.g. pcoIntegrateFire
                                 'couplingStrength': 0.01,
                                 'nodeCount': 10000,  
                                 }
-        # Network-Defaults
-        self.__defaultDict_smallWorld = {  # Defaults for smallWorld generation
-                                'rewiringProbability': 0.5,    
-                                'nearestNeighbours': 25,
-                                'edgeType': None,
-                                'distributionType': co.uniform(0.0,1.0),
-                                }
-  
-        self.__defaultDict_randomGraph = {}  # Defaults for RandomGraph generation
-        self.__defaultDict_scaleFree = {}  # Defaults for ScaleFree generation
+#Supported Topologies
+        self.__supportedNetworkTypes = {'smallWorld':self.__initSmallWorld,
+                                        'scaleFree':self.__initScaleFree,               
+                                        'randomGraph':self.__initRandomGraph,                                    
+                                        }
+        self.__networkInitialized = False
+        self.__nodesInitialized = False    
 
     def __del__(self):
         """ DOCSTRING: """
+        self.__networkInitialized = False
+        self.__nodesInitialized = False
         self.removeObserver()
         self.clear()
 
-    def __initNode_pcoIntegrateFire(self):
+    def __initNode_pcoIntegrateFire(self):  # ALLGEMEINER FASSEN, vllt via nodeString gegeben von initNodes() 
         """ DOCSTRING: """
         paramsToUpdate = {}
         for nodeParam in self.getNodeDefaults():
             if self.getNodeDefaults()[nodeParam] != self.getParam(0,'pcoIntegrateFire_'+nodeParam):
                 paramsToUpdate.update({nodeParam:self.getNodeDefaults()[nodeParam]})            
         for nodeParam in paramsToUpdate:
-            print nodeParam
             for nodeNumber in range(0,self.__networkParams['nodeCount']):
-                self.setParam(nodeNumber,'pcoIntegrateFire_'+nodeParam,paramsToUpdate[nodeParam])        
-    
+                self.setParam(nodeNumber,'pcoIntegrateFire_'+nodeParam,paramsToUpdate[nodeParam])  
+      
+#Topology-Functions    
     def __initSmallWorld(self):
         """ DOCSTRING: """
-        self.__defaultDict_smallWorld.update(self.__networkParams)
+        self.defaultDict_NetworkType.update(self.__networkParams)
 
-        self.cycle(self.__defaultDict_smallWorld['nodeCount'],
-                   self.__defaultDict_smallWorld['nearestNeighbours'],
-                   self.__defaultDict_smallWorld['nodeType'],  
-                   self.__defaultDict_smallWorld['edgeType']
+        self.cycle(self.defaultDict_NetworkType['nodeCount'],
+                   self.defaultDict_NetworkType['nearestNeighbours'],
+                   self.defaultDict_NetworkType['nodeType'],  
+                   self.defaultDict_NetworkType['edgeType']
                   )
-        self.rewire(self.__defaultDict_smallWorld['rewiringProbability'],
-                    self.__defaultDict_smallWorld['nodeType']
+        self.rewire(self.defaultDict_NetworkType['rewiringProbability'],
+                    self.defaultDict_NetworkType['nodeType']
                    )
-        self.randomizeStates(self.__defaultDict_smallWorld['nodeType'],
-                             self.__defaultDict_smallWorld['distributionType']   
+        self.randomizeStates(self.defaultDict_NetworkType['nodeType'],
+                             self.defaultDict_NetworkType['distributionType']   
                             )
+        self.__networkInitialized = True
+
+    def __initScaleFree(self):
+        raise IOError ('scaleFree creation not yet defined')
+    
+    def __initRandomGraph(self):
+        raise IOError ('randomGraph creation not yet defined')        
 
 newNet = Network()
-newNet.updateNetworkParams({'networkType': 'SmallWorld', 'edgeType': co.weightedEdge(0.01), 'nodeType': co.pcoIntegrateFire()})
+newNet.updateNetworkParams({'networkType': 'smallWorld', 'edgeType': co.weightedEdge(0.01), 'nodeType': co.pcoIntegrateFire()})
 newNet.initNetwork()
-newNet.initNodes()
+#newNet.initNodes()
 #for i in range(0,10000):
 #    print newNet.getParam(i,'pcoIntegrateFire_t_ref')
 
-#    def __initRandomGraph():
 
-#    def __initScaleFree():
